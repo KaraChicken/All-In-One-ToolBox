@@ -1,0 +1,9 @@
+{
+  "name": "SmartTool Hub - All-in-One Toolbox",
+  "description": "A comprehensive suite of online tools including text processing, developer utilities, and AI-powered generators, inspired by ToolBang.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
