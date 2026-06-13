@@ -1,58 +1,36 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy to gh-pages branch
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ['main']
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches:
+      - main
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# 允許 GitHub Actions 寫入（建立與推送）分支內容
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: 'pages'
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  # Single deploy job since we're just deploying a static SPA
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v3
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 20
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build
+      - name: Build project
         run: npm run build
-        env:
-          VITE_API: ${{ secrets.VITE_API }}
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          # Upload build output directory
-          path: './dist'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist   # Vite 預設輸出資料夾
+          publish_branch: gh-pages
