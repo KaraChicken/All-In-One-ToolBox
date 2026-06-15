@@ -5,7 +5,30 @@ import { useScreenRecorderViewModel } from '../hooks/viewmodels/useScreenRecorde
 
 const ScreenRecorder: React.FC = () => {
   const vm = useScreenRecorderViewModel();
-  const [includeMic, setIncludeMic] = useState(true);
+  const [includeMic, setIncludeMic] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
+
+  const handleMicToggle = async () => {
+    if (vm.state.isRecording) return;
+    
+    if (!includeMic) {
+      setMicError(null);
+      try {
+        // Request mic permission on user click to comply with user active consent guideline
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop all tracks immediately so we don't hold the microphone open
+        stream.getTracks().forEach(track => track.stop());
+        setIncludeMic(true);
+      } catch (err: any) {
+        console.error('Failed to grant microphone permission:', err);
+        setMicError('啟用麥克風失敗，請確保在瀏覽器中允許麥克風存取。');
+        setIncludeMic(false);
+      }
+    } else {
+      setIncludeMic(false);
+      setMicError(null);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 py-2">
@@ -51,15 +74,18 @@ const ScreenRecorder: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-3">
               <button
-                onClick={() => !vm.state.isRecording && setIncludeMic(!includeMic)}
+                onClick={handleMicToggle}
                 disabled={vm.state.isRecording}
                 className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
                   includeMic ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-slate-50 border-slate-100 text-slate-400'
                 } ${vm.state.isRecording ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
               >
                 <div className="flex items-center gap-3">
-                  {includeMic ? <Mic size={20} /> : <MicOff size={20} />}
-                  <span className="text-xs font-black">啟用麥克風</span>
+                  {includeMic ? <Mic size={20} className="text-emerald-600" /> : <MicOff size={20} />}
+                  <div className="text-left">
+                    <span className="text-xs font-black block">啟用麥克風音訊</span>
+                    {micError && <span className="text-[9px] text-rose-500 font-bold">{micError}</span>}
+                  </div>
                 </div>
                 <div className={`w-10 h-5 rounded-full relative transition-colors ${includeMic ? 'bg-emerald-500' : 'bg-slate-200'}`}>
                   <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${includeMic ? 'left-6' : 'left-1'}`} />

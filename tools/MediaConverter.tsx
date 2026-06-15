@@ -26,33 +26,112 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-4 px-2">
       {!vm.state.loaded ? (
-        <div className="bg-white p-8 sm:p-12 rounded-[2.5rem] border-2 border-dashed border-gray-100 text-center space-y-6 shadow-sm">
-          <div className="bg-indigo-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-inner">
-             <Video className="text-indigo-600" size={32} />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-lg font-black text-gray-800">行動影音轉檔模式</h3>
-            <p className="text-gray-400 text-xs leading-relaxed max-w-xs mx-auto">
-              {vm.state.isSTMode 
-                ? '偵測到環境限制，將使用「相容模式」運行。手機轉檔速度會較慢，請保持螢幕開啟。' 
-                : '您的環境支援高速轉檔。'}
-            </p>
-          </div>
-          
-          {vm.state.error && (
-            <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-[11px] font-bold">
-              {vm.state.error}
-            </div>
-          )}
+        <div className="bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 text-center space-y-6 shadow-sm">
+          {vm.state.initializing ? (
+            <div className="space-y-6 animate-in fade-in duration-300 max-w-xl mx-auto">
+              <div className="bg-indigo-50 dark:bg-indigo-950/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <Video className="text-indigo-600 dark:text-indigo-400" size={28} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">正在啟動影音核心轉檔引擎...</h3>
+                <p className="text-slate-450 dark:text-slate-500 text-[11px] sm:text-xs leading-relaxed max-w-xs mx-auto">
+                  首次載入將啟用 WebAssembly 機制與高效能解碼硬體加速
+                </p>
+              </div>
 
-          <button 
-            onClick={vm.commands.load}
-            disabled={vm.state.loading}
-            className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 shadow-lg shadow-indigo-100"
-          >
-            {vm.state.loading ? <RefreshCw className="animate-spin" size={18} /> : <Zap size={18} />}
-            {vm.state.loading ? '載入中...' : '啟動轉檔引擎'}
-          </button>
+              {/* Progress Bar + Percentage */}
+              <div className="w-full space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-black tracking-wider text-indigo-600 dark:text-indigo-400">
+                  <span className="uppercase text-[9px] sm:text-[10px] bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-0.5 rounded-full select-none">
+                    {vm.state.initProgress < 100 ? 'Initializer Thread' : 'Ready'}
+                  </span>
+                  <span className="font-mono text-sm sm:text-base">{vm.state.initProgress}%</span>
+                </div>
+                <div className="overflow-hidden h-3 rounded-full bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200/50 dark:border-slate-700/50">
+                  <div 
+                    style={{ width: `${vm.state.initProgress}%` }} 
+                    className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 rounded-full transition-all duration-300 shadow-[0_0_12px_rgba(99,102,241,0.4)]"
+                  />
+                </div>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1 min-h-[14px]">
+                  {vm.state.initProgress < 40 ? '正在下載基礎編解碼核心檔案...' : 
+                   vm.state.initProgress < 85 ? '正在載入動態 WebAssembly 加速模組...' : 
+                   vm.state.initProgress < 100 ? '正在設定沙盒效能與防溢位安全性...' : '轉檔核心啟動成功！'}
+                </p>
+              </div>
+
+              {/* Terminal Logs View */}
+              <div className="w-full text-left space-y-1">
+                <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900 border-b border-slate-850 rounded-t-xl">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500/80" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500/80" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <span className="text-[9px] font-mono font-bold text-slate-500 select-none uppercase tracking-widest">
+                    INITIALIZATION TERMINAL LOG
+                  </span>
+                </div>
+                <div 
+                  className="bg-slate-950 text-emerald-400 font-mono text-[10px] sm:text-[11px] p-3 sm:p-4 rounded-b-xl border-x border-b border-slate-900 shadow-inner h-40 overflow-y-auto space-y-1"
+                >
+                  {vm.state.initLogs && vm.state.initLogs.length > 0 ? (
+                    vm.state.initLogs.map((log: string, idx: number) => {
+                      let color = 'text-slate-300';
+                      if (log.includes('❌') || log.includes('error') || log.includes('Fatal')) {
+                        color = 'text-rose-400';
+                      } else if (log.includes('⚠️') || log.includes('Notice') || log.includes('Warning')) {
+                        color = 'text-amber-400';
+                      } else if (log.includes('🚀') || log.includes('started') || log.includes('successfully!')) {
+                        color = 'text-emerald-400 font-bold';
+                      } else if (log.includes('[Core]')) {
+                        color = 'text-indigo-400';
+                      }
+                      return (
+                        <div key={idx} className={`${color} leading-relaxed break-all whitespace-pre-wrap`}>
+                          {log}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-slate-500 italic animate-pulse">
+                      Initializing trace thread...
+                    </div>
+                  )}
+                  {/* Anchor to scroll logs down */}
+                  <div ref={(el) => el?.scrollIntoView({ behavior: 'smooth' })} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-indigo-50 dark:bg-indigo-950/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                 <Video className="text-indigo-600 dark:text-indigo-400" size={32} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">行動影音轉檔模式</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-xs leading-relaxed max-w-xs mx-auto">
+                  {vm.state.isSTMode 
+                    ? '偵測到環境限制，將使用「相容模式」運行。手機轉檔速度會較慢，請保持螢幕開啟。' 
+                    : '您的環境支援高速轉檔。'}
+                </p>
+              </div>
+              
+              {vm.state.error && (
+                <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900 text-rose-600 dark:text-rose-400 rounded-2xl text-[11px] font-bold">
+                  {vm.state.error}
+                </div>
+              )}
+
+              <button 
+                onClick={vm.commands.load}
+                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2 mx-auto shadow-lg shadow-indigo-100 dark:shadow-none"
+              >
+                <Zap size={18} />
+                啟動轉檔引擎
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-6">

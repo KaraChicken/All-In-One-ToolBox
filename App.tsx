@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter as Router } from 'react-router-dom';
 import Layout from './components/Layout';
 import ToolGrid from './components/ToolGrid';
@@ -33,6 +33,25 @@ import NewYearCountdown from './tools/NewYearCountdown';
 import ScreenRecorder from './tools/ScreenRecorder';
 
 const App: React.FC = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('smarttool_theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('smarttool_theme', theme);
+  }, [theme]);
+
   const vm = useAppViewModel();
 
   const renderToolContent = (toolId: string) => {
@@ -68,8 +87,8 @@ const App: React.FC = () => {
     if (!content) return null;
 
     return (
-      <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-[cubic-bezier(0.2,0,0,1)] max-w-5xl mx-auto">
-        <div className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
+      <div className="animate-in fade-in slide-in-from-right-8 duration-500 ease-[cubic-bezier(0.2,0,0,1)] max-w-5xl mx-auto w-full px-2 sm:px-4 md:px-0">
+        <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 md:p-10 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-[0_12px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
           {content}
         </div>
       </div>
@@ -88,6 +107,8 @@ const App: React.FC = () => {
           onBack={vm.commands.closeTool}
           lang={vm.lang}
           setLang={vm.setLang}
+          theme={theme}
+          setTheme={setTheme}
         >
           {vm.activeToolId ? (
             renderToolContent(vm.activeToolId)

@@ -24,34 +24,42 @@ const ToolGrid: React.FC<ToolGridProps> = ({
   const renderTool = (tool: Tool) => {
     const isFav = favorites.includes(tool.id);
     return (
-      <button 
+      <div 
         key={tool.id} 
         onClick={() => onToolClick(tool.id)}
-        className="group relative bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 hover:bg-emerald-50/50 hover:border-emerald-200 transition-all duration-300 text-center flex flex-col items-center ripple"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToolClick(tool.id);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        className="group relative bg-white dark:bg-slate-900 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] dark:hover:shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:border-emerald-200 dark:hover:border-emerald-800/50 hover:-translate-y-1.5 transition-all duration-300 text-center flex flex-col items-center ripple w-full h-full cursor-pointer select-none"
       >
         <button 
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(tool.id); }}
-          className={`absolute top-4 right-4 p-2 rounded-full transition-all z-10 ${isFav ? 'text-emerald-600 bg-emerald-100/50' : 'text-slate-300 opacity-0 group-hover:opacity-100'}`}
+          className={`absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full transition-all z-10 ${isFav ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-950/50' : 'text-slate-300 dark:text-slate-600 opacity-100 sm:opacity-0 group-hover:opacity-100'}`}
         >
-          <Star size={18} fill={isFav ? "currentColor" : "none"} />
+          <Star size={16} className="sm:w-[18px] sm:h-[18px]" fill={isFav ? "currentColor" : "none"} />
         </button>
 
-        <div className={`mb-5 p-5 rounded-[1.75rem] transition-all duration-500 flex items-center justify-center ${
-          tool.category === 'Developer' ? 'bg-emerald-100/50 text-emerald-700' :
-          tool.category === 'Text' ? 'bg-blue-100/50 text-blue-700' :
-          tool.category === 'Language' ? 'bg-teal-100/50 text-teal-700' :
-          'bg-slate-100/50 text-slate-700'
-        } group-hover:scale-110 group-hover:bg-white group-hover:shadow-lg`}>
-          {getIcon(tool.icon, "w-8 h-8 md:w-9 md:h-9")}
+        <div className={`mb-3 sm:mb-5 p-3 sm:p-5 rounded-xl sm:rounded-[1.75rem] transition-all duration-500 flex items-center justify-center ${
+          tool.category === 'Developer' ? 'bg-emerald-100/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400' :
+          tool.category === 'Text' ? 'bg-blue-100/50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' :
+          tool.category === 'Language' ? 'bg-teal-100/50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400' :
+          'bg-slate-100/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+        } group-hover:scale-110 group-hover:bg-white dark:group-hover:bg-slate-800 group-hover:shadow-lg`}>
+          {getIcon(tool.icon, "w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9")}
         </div>
         
-        <h3 className="text-sm md:text-base font-bold text-slate-900 group-hover:text-emerald-800 transition-colors mb-2 tracking-tight">
+        <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors mb-1 sm:mb-2 tracking-tight">
           {tool.name[lang]}
         </h3>
-        <p className="text-[11px] md:text-xs text-slate-500 font-medium leading-relaxed line-clamp-2 px-1">
+        <p className="text-[10px] sm:text-[11px] md:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed line-clamp-2 px-0.5 sm:px-1">
           {tool.description[lang]}
         </p>
-      </button>
+      </div>
     );
   };
 

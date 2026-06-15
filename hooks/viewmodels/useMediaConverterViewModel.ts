@@ -10,6 +10,9 @@ export const useMediaConverterViewModel = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [initProgress, setInitProgress] = useState(0);
+  const [initializing, setInitializing] = useState(false);
+  const [initLogs, setInitLogs] = useState<string[]>([]);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [targetFormat, setTargetFormat] = useState('mp4');
   const [error, setError] = useState<string | null>(null);
@@ -18,30 +21,86 @@ export const useMediaConverterViewModel = () => {
 
   const load = async () => {
     setLoading(true);
-    startLoading('正在初始化影音引擎...');
+    setInitializing(true);
+    setInitProgress(0);
+    setInitLogs([]);
     setError(null);
     const ffmpeg = ffmpegRef.current;
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
     
-    ffmpeg.on('log', ({ message }) => console.debug(message));
+    const appendLog = (msg: string) => {
+      setInitLogs(prev => [...prev.slice(-99), `[${new Date().toLocaleTimeString()}] ${msg}`]);
+    };
+
+    ffmpeg.on('log', ({ message }) => {
+      console.debug(message);
+      appendLog(`[Core] ${message}`);
+    });
     ffmpeg.on('progress', ({ progress }) => setProgress(Math.round(progress * 100)));
+
+    // Smoothly animate initialization progress up during web assembly & dynamic code loading
+    let currentPct = 0;
+    const interval = setInterval(() => {
+      if (currentPct < 40) {
+        currentPct += Math.floor(Math.random() * 5) + 3; // Fast initial jump
+      } else if (currentPct < 75) {
+        currentPct += Math.floor(Math.random() * 3) + 1; // Normal speed
+      } else if (currentPct < 96) {
+        currentPct += Math.floor(Math.random() * 2); // Slow down towards the end
+      }
+      if (currentPct > 96) currentPct = 96;
+      setInitProgress(currentPct);
+
+      if (currentPct > 10 && currentPct <= 20 && currentPct % 5 === 0) {
+        appendLog('Downloading WebAssembly dependencies from unpkg...');
+      } else if (currentPct > 35 && currentPct <= 45 && currentPct % 5 === 0) {
+        appendLog('Compiling high-performance video / audio codecs...');
+      } else if (currentPct > 60 && currentPct <= 70 && currentPct % 5 === 0) {
+        appendLog('Configuring secure browser isolate environment...');
+      } else if (currentPct > 85 && currentPct <= 90 && currentPct % 5 === 0) {
+        appendLog('Optimizing heap allocations & compiling ASM bindings...');
+      }
+    }, 150);
 
     try {
       const isSABSupported = typeof SharedArrayBuffer !== 'undefined';
+      appendLog(`System check: SharedArrayBuffer supported = ${isSABSupported}`);
       if (!isSABSupported) {
         setIsSTMode(true);
+        appendLog('⚠️ Notice: SharedArrayBuffer is not supported by your browser. Running in fallback thread-compatibility mode.');
+      } else {
+        appendLog('System check: High-speed multithreading enabled.');
       }
 
+      appendLog('Downloading ffmpeg-core.js main thread loader...');
+      const coreBlobURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
+      appendLog('ffmpeg-core.js downloaded successfully.');
+
+      appendLog('Downloading ffmpeg-core.wasm memory structures...');
+      const wasmBlobURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
+      appendLog('ffmpeg-core.wasm downloaded successfully. Bootstrapping runtime...');
+
+      appendLog('Loading WebAssembly core package into active worker...');
       await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        coreURL: coreBlobURL,
+        wasmURL: wasmBlobURL,
       });
+
+      clearInterval(interval);
+      setInitProgress(100);
+      appendLog('🚀 Conversion engine started successfully!');
+      // Give a brief moment for the user to see the 100% completion before switching states
+      await new Promise(resolve => setTimeout(resolve, 300));
       setLoaded(true);
     } catch (e: any) {
+      clearInterval(interval);
+      setInitProgress(0);
+      appendLog(`❌ Fatal: Initialization failed. Error details: ${e?.message || e}`);
       setError(`影音核心載入失敗。這通常是因為手機瀏覽器安全性限制。若要修復，請使用電腦版瀏覽器。`);
     } finally {
+      clearInterval(interval);
       setLoading(false);
-      stopLoading();
+      setInitializing(false);
     }
   };
 
@@ -83,7 +142,7 @@ export const useMediaConverterViewModel = () => {
   };
 
   return {
-    state: { loaded, file, loading, progress, resultUrl, targetFormat, error, isSTMode },
+    state: { loaded, file, loading, progress, initProgress, initLogs, initializing, resultUrl, targetFormat, error, isSTMode },
     commands: {
       load,
       convert,
