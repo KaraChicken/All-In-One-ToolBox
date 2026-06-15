@@ -5,7 +5,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SmartTool Hub - Android Edition</title>
+  <script>
+    // Prevent errors where libraries or ESM loaders try to reassign window.fetch
+    (function() {
+      const originalFetch = window.fetch;
+      let currentFetch = originalFetch;
+      try {
+        Object.defineProperty(window, 'fetch', {
+          get() {
+            return currentFetch;
+          },
+          set(val) {
+            currentFetch = val;
+          },
+          configurable: true,
+          enumerable: true
+        });
+      } catch (e) {
+        console.warn('Failed to define fetch property wrapper:', e);
+      }
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {}
+      }
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -16,12 +45,129 @@
       --md-sys-color-on-surface: #191c19;
       --md-sys-color-outline: #717971;
     }
+    
+    html.dark {
+      --md-sys-color-surface: #0a0e17;
+      --md-sys-color-surface-variant: #111827;
+      --md-sys-color-on-surface: #f3f4f6;
+      --md-sys-color-outline: #9ca3af;
+    }
+
     body { 
       font-family: 'Plus Jakarta Sans', 'Roboto', sans-serif; 
       background-color: var(--md-sys-color-surface);
       color: var(--md-sys-color-on-surface);
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Elegant Custom Dark Mode Classes Overrides to ensure 30+ tools look stunning automatically */
+    html.dark body {
+      background-color: #0a0e17;
+      color: #f3f4f6;
+    }
+
+    html.dark .bg-white {
+      background-color: #111827 !important;
+      color: #f3f4f6 !important;
+      border-color: #1f2937 !important;
+    }
+
+    html.dark .border-slate-100, 
+    html.dark .border-slate-200, 
+    html.dark .border-gray-100 {
+      border-color: #1f2937 !important;
+    }
+
+    html.dark select, 
+    html.dark input, 
+    html.dark textarea {
+      background-color: #1f2937 !important;
+      color: #f3f4f6 !important;
+      border-color: #374151 !important;
+    }
+
+    html.dark select option {
+      background-color: #111827 !important;
+      color: #f3f4f6 !important;
+    }
+
+    html.dark .bg-slate-50,
+    html.dark .bg-gray-50 {
+      background-color: #1f2937 !important;
+    }
+
+    html.dark .bg-slate-100,
+    html.dark .bg-gray-100 {
+      background-color: #374151 !important;
+    }
+
+    html.dark .text-slate-900, 
+    html.dark .text-slate-800,
+    html.dark .text-gray-900,
+    html.dark .text-gray-800 {
+      color: #f9fafb !important;
+    }
+
+    html.dark .text-slate-700, 
+    html.dark .text-slate-600,
+    html.dark .text-gray-700,
+    html.dark .text-gray-600 {
+      color: #cbd5e1 !important;
+    }
+
+    html.dark .text-slate-500,
+    html.dark .text-gray-500 {
+      color: #9ca3af !important;
+    }
+
+    html.dark .text-slate-400,
+    html.dark .text-gray-400 {
+      color: #6b7280 !important;
+    }
+
+    html.dark .text-slate-300,
+    html.dark .text-gray-300 {
+      color: #4b5563 !important;
+    }
+
+    /* M3 Theme Styling updates under Dark Mode */
+    html.dark .m3-card {
+      background: #111827 !important;
+      border-color: #1f2937 !important;
+    }
+
+    html.dark .m3-card-tonal {
+      background: #064e3b !important;
+      color: #34d399 !important;
+    }
+
+    html.dark .bg-emerald-50\/50:hover {
+      background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    html.dark .bg-emerald-100 {
+      background-color: #064e3b !important;
+      color: #34d399 !important;
+    }
+
+    html.dark .bg-emerald-50 {
+      background-color: #022c22 !important;
+      border-color: #064e3b !important;
+    }
+
+    html.dark .text-emerald-950, 
+    html.dark .text-emerald-900 {
+      color: #34d399 !important;
+    }
+
+    html.dark .text-emerald-700 {
+      color: #34d399 !important;
+    }
+
+    html.dark .text-emerald-800 {
+      color: #6ee7b7 !important;
     }
     /* Android Style Ripple Effect Simulation */
     .ripple {
@@ -77,7 +223,7 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/All-In-One-ToolBox/assets/index-CVYt0QGD.js"></script>
+  <script type="module" crossorigin src="/All-In-One-ToolBox/assets/index-DZwsSkL_.js"></script>
 </head>
 <body class="min-h-screen selection:bg-emerald-200">
   <div id="root"></div>
