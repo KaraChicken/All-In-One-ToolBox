@@ -22,6 +22,8 @@ export const useMediaConverterViewModel = () => {
   const [speed, setSpeed] = useState('1.0');
   const [error, setError] = useState<string | null>(null);
   const [isSTMode, setIsSTMode] = useState(false);
+  const [hasThreadFallback, setHasThreadFallback] = useState(false);
+  const [loadedSTMode, setLoadedSTMode] = useState<boolean | null>(null);
   const [conversionMode, setConversionMode] = useState<'compatibility' | 'speed' | 'quality'>('compatibility');
   const ffmpegRef = useRef(new FFmpeg());
 
@@ -40,6 +42,8 @@ export const useMediaConverterViewModel = () => {
     setInitProgress(0);
     setInitLogs([]);
     setError(null);
+    setHasThreadFallback(false);
+    setLoadedSTMode(null);
     const ffmpeg = ffmpegRef.current;
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
 
@@ -81,13 +85,19 @@ export const useMediaConverterViewModel = () => {
       let finalSTMode = isSTMode;
       if (!isSTMode && !isSABSupported) {
         finalSTMode = true;
+        setHasThreadFallback(true);
         setIsSTMode(true);
         appendLog('⚠️ Notice: Multi-Thread is selected but SharedArrayBuffer is not supported by your browser. Running in fallback Single-Thread mode.');
-      } else if (isSTMode) {
-        appendLog('Running in compatibility mode (Single-Thread) as requested.');
       } else {
-        appendLog('Running in high-speed mode (Multi-Thread) with safe thread isolation.');
+        setHasThreadFallback(false);
+        if (isSTMode) {
+          appendLog('Running in compatibility mode (Single-Thread) as requested.');
+        } else {
+          appendLog('Running in high-speed mode (Multi-Thread) with safe thread isolation.');
+        }
       }
+
+      setLoadedSTMode(finalSTMode);
 
       appendLog('Downloading ffmpeg-core.js main thread loader...');
       const coreBlobURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
@@ -280,6 +290,8 @@ export const useMediaConverterViewModel = () => {
       targetFormat, 
       error, 
       isSTMode,
+      hasThreadFallback,
+      loadedSTMode,
       resolution,
       fps,
       audioBitrate,
@@ -312,6 +324,8 @@ export const useMediaConverterViewModel = () => {
         setInitializing(false);
         setInitLogs([]);
         setInitProgress(0);
+        setHasThreadFallback(false);
+        setLoadedSTMode(null);
       },
       resetResult: () => setResultUrl(null)
     }

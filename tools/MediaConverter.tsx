@@ -224,21 +224,42 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          <div className={`p-3 px-4 rounded-2xl flex items-center justify-between gap-3 border ${vm.state.isSTMode ? 'bg-amber-50/60 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/30 text-amber-700 dark:text-amber-450' : 'bg-indigo-50/60 dark:bg-indigo-950/10 border-indigo-100 dark:border-indigo-900/30 text-indigo-700 dark:text-indigo-400'}`}>
-            <div className="flex items-center gap-2.5">
-              {vm.state.isSTMode ? <Smartphone size={15} /> : <Zap size={15} />}
-              <span className="text-[10px] font-extrabold uppercase tracking-wider">
-                核心解碼狀態：{vm.state.isSTMode ? '相容模式 (單執行緒)' : '高速運行中 (多執行緒)'}
-              </span>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <div className={`p-3 px-4 rounded-2xl flex items-center justify-between gap-3 border ${vm.state.isSTMode ? 'bg-amber-50/60 dark:bg-amber-950/15 border-amber-100 dark:border-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-indigo-50/60 dark:bg-indigo-950/15 border-indigo-100 dark:border-indigo-900/30 text-indigo-700 dark:text-indigo-400'}`}>
+              <div className="flex items-center gap-2.5">
+                {vm.state.isSTMode ? <Smartphone size={15} /> : <Zap size={15} />}
+                <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                  核心解碼狀態：{vm.state.isSTMode ? '相容模式 (單執行緒)' : '高速運行中 (多執行緒)'}
+                </span>
+              </div>
+              <button
+                onClick={vm.commands.resetEngine}
+                className="px-2.5 py-1 text-[9px] font-black bg-white dark:bg-slate-800 hover:bg-slate-100 hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200/50 dark:border-slate-700/60 transition shadow-sm active:scale-95"
+                title="重新設定執行緒數量與模式規格"
+              >
+                🔄 重設執行緒
+              </button>
             </div>
-            <button
-              onClick={vm.commands.resetEngine}
-              className="px-2.5 py-1 text-[9px] font-black bg-white dark:bg-slate-800 hover:bg-slate-105 hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200/50 dark:border-slate-700/60 transition shadow-sm active:scale-95"
-              title="重新設定執行緒數量與模式規格"
-            >
-              🔄 重設執行緒
-            </button>
+            
+            {vm.state.hasThreadFallback && (
+              <div className="p-3.5 px-4 rounded-2xl bg-amber-50/20 dark:bg-amber-955/5 border border-amber-100/50 dark:border-amber-900/20 text-slate-600 dark:text-slate-300">
+                <p className="text-[10.5px] font-black text-amber-750 dark:text-amber-400 flex items-center gap-1.5 leading-normal">
+                  <span>⚠️ 偵測到瀏覽器沙盒限制</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100/60 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 uppercase font-black tracking-tight scale-90 origin-left">
+                    自動相容降級
+                  </span>
+                </p>
+                <div className="text-[10px] space-y-1.5 mt-1.5 leading-relaxed text-slate-500 dark:text-slate-400 font-bold">
+                  <p>
+                    原先您選擇了「高速模式 (多執行緒)」，但此瀏覽器版面 (例如內嵌預覽 Iframe) 限制了多執行緒，轉檔引擎已自動切換至「相容模式」進行編譯，以確保轉檔 100% 成功。
+                  </p>
+                  <p className="text-[9.5px] text-indigo-600 dark:text-indigo-400 border-t border-dashed border-amber-200/50 dark:border-amber-900/30 pt-1.5 font-black">
+                    💡 點擊右上角「在新分頁打開」應用程式：由於我們已配置 COOP/COEP 獨立執行安全標頭，在新分頁中重新啟動轉檔即可完美解鎖多執行緒核心性能！
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -325,7 +346,9 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                   })}
                 </div>
               </div>
+            </div>
 
+            <div className="space-y-6">
               {/* Extra conversion custom options panel */}
               <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
                 <div className="flex items-center gap-1.5 border-b border-gray-100 pb-2">
@@ -565,9 +588,8 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                   </button>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-gray-50 rounded-[2.5rem] border border-gray-100 min-h-[320px] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+              <div className="bg-gray-55/70 dark:bg-slate-900/50 rounded-[2.5rem] border border-gray-150/50 dark:border-slate-800/80 min-h-[320px] flex flex-col items-center justify-center p-6 relative overflow-hidden">
                {vm.state.loading && (
                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-10 p-6 text-center animate-in fade-in">
                     <div className="w-full max-w-xs space-y-4">
@@ -617,6 +639,7 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                )}
             </div>
           </div>
+        </div>
 
           {/* Terminal Log Panel */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm space-y-3">

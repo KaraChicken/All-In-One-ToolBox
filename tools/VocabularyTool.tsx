@@ -367,7 +367,7 @@ const VocabularyTool: React.FC<Props> = ({ lang }) => {
                   return (
                     <div 
                       key={iIdx} 
-                      className="bg-white dark:bg-slate-900 rounded-[2.2rem] border border-gray-100 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between p-5 min-h-[160px] group"
+                      className="bg-white dark:bg-slate-900/60 rounded-[2.2rem] border border-gray-100 dark:border-slate-800/50 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between p-5 min-h-[160px] group"
                     >
                       {/* Top Row: Language Indicators & Soundwave triggers */}
                       <div className="grid grid-cols-2 gap-3 border-b border-slate-50 dark:border-slate-800/60 pb-3 mb-3">
@@ -382,7 +382,7 @@ const VocabularyTool: React.FC<Props> = ({ lang }) => {
                             className={`p-1.5 rounded-lg transition-all ${
                               isSourceSpeaking 
                                 ? 'bg-indigo-150 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400 animate-pulse' 
-                                : 'bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-slate-400 hover:text-indigo-600'
+                                : 'bg-slate-50 dark:bg-slate-900/50 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 text-slate-400 hover:text-indigo-600'
                             }`}
                             title="朗讀發音"
                           >
@@ -401,7 +401,7 @@ const VocabularyTool: React.FC<Props> = ({ lang }) => {
                             className={`p-1.5 rounded-lg transition-all ${
                               isTargetSpeaking 
                                 ? 'bg-emerald-150 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 animate-pulse' 
-                                : 'bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-slate-400 hover:text-emerald-500'
+                                : 'bg-slate-50 dark:bg-slate-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-slate-400 hover:text-emerald-500'
                             }`}
                             title="朗讀發音"
                           >

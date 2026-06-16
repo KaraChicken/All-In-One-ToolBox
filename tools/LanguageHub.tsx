@@ -302,7 +302,7 @@ const LanguageHub: React.FC<Props> = ({ lang }) => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm overflow-x-auto no-scrollbar">
+          <div className="bg-white dark:bg-slate-900/40 p-4 sm:p-6 rounded-[2.5rem] border border-gray-100 dark:border-slate-800/60 shadow-sm overflow-x-auto no-scrollbar">
             <div className="min-w-[640px] space-y-3">
               {/* Header Columns */}
               <div className="grid grid-cols-[100px,repeat(5,1fr)] items-center border-b border-gray-50 dark:border-slate-800 pb-3 font-semibold text-center text-[10px] uppercase text-slate-400 tracking-widest">
@@ -322,14 +322,14 @@ const LanguageHub: React.FC<Props> = ({ lang }) => {
                   </div>
                   {rowObj.items.map((item, iIndex) => {
                     if (item === null) {
-                      return <div key={iIndex} className="bg-slate-50/20 dark:bg-slate-800/5 h-[80px] rounded-2xl border border-dashed border-slate-100/30" />;
+                      return <div key={iIndex} className="bg-slate-50/20 dark:bg-slate-850/10 h-[80px] rounded-2xl border border-dashed border-slate-150/20 dark:border-slate-800/30" />;
                     }
                     const textToRead = item.hiragana;
                     return (
                       <button
                         key={iIndex}
                         onClick={() => speakText(textToRead)}
-                        className="bg-white dark:bg-slate-950 p-2 h-[85px] hover:h-[87px] border border-slate-100 dark:border-slate-800/80 rounded-2xl flex flex-col items-center justify-between text-center shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 group hover:-translate-y-0.5 transition-all outline-none"
+                        className="bg-white dark:bg-slate-900/60 p-2 h-[85px] hover:h-[87px] border border-slate-100 dark:border-slate-800/50 rounded-2xl flex flex-col items-center justify-between text-center shadow-sm hover:shadow-md hover:border-emerald-400 dark:hover:border-emerald-800/80 group hover:-translate-y-0.5 transition-all outline-none"
                       >
                         {/* Upper: Kana selection */}
                         <div className="flex flex-col items-center justify-center flex-1 py-1">
@@ -356,7 +356,7 @@ const LanguageHub: React.FC<Props> = ({ lang }) => {
                         </div>
 
                         {/* Lower: Romaji indicator */}
-                        <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-lg py-0.5 mt-1">
+                        <div className="w-full bg-slate-50 dark:bg-slate-800/35 rounded-lg py-0.5 mt-1">
                           <span className="text-[10px] font-mono font-extrabold tracking-tight text-slate-500 dark:text-slate-400 uppercase">
                             {item.romaji}
                           </span>
@@ -392,7 +392,7 @@ const LanguageHub: React.FC<Props> = ({ lang }) => {
                 <button
                   key={item.char}
                   onClick={() => speakText(item.char)}
-                  className="bg-white dark:bg-slate-900 hover:bg-indigo-50/10 p-4 border border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-800 transition-all gap-1.5 group outline-none"
+                  className="bg-white dark:bg-slate-900/60 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/20 p-4 border border-slate-100 dark:border-slate-800/50 rounded-3xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-805/80 transition-all gap-1.5 group outline-none"
                 >
                   <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                     {item.char}
@@ -424,7 +424,7 @@ const LanguageHub: React.FC<Props> = ({ lang }) => {
                 <button
                   key={item.char}
                   onClick={() => speakText(item.char)}
-                  className="bg-white dark:bg-slate-900 hover:bg-emerald-50/10 p-4 border border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 transition-all gap-1.5 group outline-none"
+                  className="bg-white dark:bg-slate-900/60 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/20 p-4 border border-slate-100 dark:border-slate-800/50 rounded-3xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-emerald-400 dark:hover:border-emerald-805/80 transition-all gap-1.5 group outline-none"
                 >
                   <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                     {item.char}

@@ -269,10 +269,10 @@ const GrammarTool: React.FC<Props> = ({ lang }) => {
                     speakGrammar(currentItem.example, key as Language, cardKey);
                   }
                 }}
-                className={`w-full text-left bg-white dark:bg-slate-900 p-6 rounded-[2.2rem] border min-h-[190px] ${
+                className={`w-full text-left bg-white dark:bg-slate-900/60 p-6 rounded-[2.2rem] border min-h-[190px] ${
                   isCurrentlySpeaking 
                     ? `border-indigo-500 dark:border-indigo-500 scale-[1.01] shadow-md ring-2 ring-indigo-500/10` 
-                    : `border-gray-100 dark:border-slate-800/80`
+                    : `border-gray-100 dark:border-slate-800/60`
                 } ${themeColors.border} shadow-xs hover:shadow-md transition-all duration-300 active:scale-98 group hover:-translate-y-0.5 outline-none flex flex-col justify-between`}
               >
                  {/* Card Header row */}
@@ -298,7 +298,7 @@ const GrammarTool: React.FC<Props> = ({ lang }) => {
                           <span className={`w-0.75 h-1.5 bg-indigo-500 rounded-full animate-bounce`} />
                         </div>
                       ) : (
-                        <div className="p-1 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950 group-hover:text-indigo-600 transition-all">
+                        <div className="p-1 rounded-lg bg-slate-50 dark:bg-slate-900/50 text-slate-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950 group-hover:text-indigo-600 transition-all">
                           <Volume2 size={13} />
                         </div>
                       )}
@@ -312,14 +312,14 @@ const GrammarTool: React.FC<Props> = ({ lang }) => {
                         <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           [架構規律 Word Order / Suffixes]
                         </p>
-                        <p className="text-xs sm:text-[13px] font-black text-slate-700 dark:text-slate-350 font-mono tracking-tight bg-slate-50/50 dark:bg-slate-950/40 py-1.5 px-3 rounded-lg border border-slate-100/50 dark:border-slate-800">
+                        <p className="text-xs sm:text-[13px] font-black text-slate-700 dark:text-slate-350 font-mono tracking-tight bg-slate-50/50 dark:bg-slate-950/20 py-1.5 px-3 rounded-lg border border-slate-100/50 dark:border-slate-800/40">
                           {currentItem.pattern}
                         </p>
                       </div>
                     )}
 
                     {/* Example block styled with extreme display size */}
-                    <div className={`p-4 rounded-xl ${themeColors.bg} border border-dashed border-slate-150 dark:border-slate-800`}>
+                    <div className={`p-4 rounded-xl ${themeColors.bg} border border-dashed border-slate-150 dark:border-slate-800/40`}>
                       <span className="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                         [真實例句範例 Example]
                       </span>
