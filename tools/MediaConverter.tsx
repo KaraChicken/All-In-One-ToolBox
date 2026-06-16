@@ -147,17 +147,68 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
               <div className="bg-indigo-50 dark:bg-indigo-950/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-inner">
                  <Video className="text-indigo-600 dark:text-indigo-400" size={32} />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">行動影音轉檔模式</h3>
-                <p className="text-slate-400 dark:text-slate-500 text-xs leading-relaxed max-w-xs mx-auto">
-                  {vm.state.isSTMode 
-                    ? '偵測到環境限制，將使用「相容模式」運行。手機轉檔速度會較慢，請保持螢幕開啟。' 
-                    : '您的環境支援高速轉檔。'}
+              <div className="space-y-2 max-w-lg mx-auto">
+                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">設定核心解碼執行緒</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-xs leading-relaxed px-4">
+                  轉檔需要在瀏覽器內載入高性能 WebAssembly 沙盒。推薦根據本機裝置規格與相容性來手動配置執行緒模式：
                 </p>
+
+                {/* 執行緒切換選項 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 max-w-md mx-auto text-left select-none">
+                  <button
+                    type="button"
+                    onClick={() => vm.commands.setIsSTMode(false)}
+                    className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-1 relative text-left outline-none ${
+                      !vm.state.isSTMode
+                        ? 'border-indigo-600 bg-indigo-55/20 dark:bg-indigo-950/20 shadow-sm shadow-indigo-100/50'
+                        : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`p-1.5 rounded-lg ${!vm.state.isSTMode ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800'}`}>
+                        <Zap size={11} />
+                      </div>
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-100">高速模式 (多執行緒)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-bold">
+                      支援多核心 CPU 高速並行編解碼。對於影片/大檔案處理速度加倍。需 SharedArrayBuffer 支援（部分舊機不可用）。
+                    </span>
+                    {!vm.state.isSTMode && (
+                      <span className="absolute top-3 right-3 text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/30">
+                        啟用
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => vm.commands.setIsSTMode(true)}
+                    className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-1 relative text-left outline-none ${
+                      vm.state.isSTMode
+                        ? 'border-amber-600 bg-amber-55/15 dark:bg-amber-950/15 shadow-sm shadow-amber-50'
+                        : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`p-1.5 rounded-lg ${vm.state.isSTMode ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800'}`}>
+                        <Smartphone size={11} />
+                      </div>
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-100">相容模式 (單執行緒)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-bold">
+                      採取單核心循序漸進編解碼。在 iOS/手機瀏覽器或其他舊版本架構下 100% 能相容運作，記憶體消耗更低。
+                    </span>
+                    {vm.state.isSTMode && (
+                      <span className="absolute top-3 right-3 text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md bg-amber-50/80 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/30">
+                        啟用
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
               
               {vm.state.error && (
-                <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900 text-rose-600 dark:text-rose-400 rounded-2xl text-[11px] font-bold">
+                <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900 text-rose-600 dark:text-rose-400 rounded-2xl text-[11px] font-bold max-w-md mx-auto">
                   {vm.state.error}
                 </div>
               )}
@@ -174,11 +225,20 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          <div className={`p-3 rounded-2xl flex items-center gap-3 border ${vm.state.isSTMode ? 'bg-amber-50 border-amber-100 text-amber-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}>
-            {vm.state.isSTMode ? <Smartphone size={16} /> : <Zap size={16} />}
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              {vm.state.isSTMode ? '相容模式 (單執行緒)' : '高速模式 (多執行緒)'}
-            </span>
+          <div className={`p-3 px-4 rounded-2xl flex items-center justify-between gap-3 border ${vm.state.isSTMode ? 'bg-amber-50/60 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/30 text-amber-700 dark:text-amber-450' : 'bg-indigo-50/60 dark:bg-indigo-950/10 border-indigo-100 dark:border-indigo-900/30 text-indigo-700 dark:text-indigo-400'}`}>
+            <div className="flex items-center gap-2.5">
+              {vm.state.isSTMode ? <Smartphone size={15} /> : <Zap size={15} />}
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                核心解碼狀態：{vm.state.isSTMode ? '相容模式 (單執行緒)' : '高速運行中 (多執行緒)'}
+              </span>
+            </div>
+            <button
+              onClick={vm.commands.resetEngine}
+              className="px-2.5 py-1 text-[9px] font-black bg-white dark:bg-slate-800 hover:bg-slate-105 hover:text-slate-900 dark:hover:text-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200/50 dark:border-slate-700/60 transition shadow-sm active:scale-95"
+              title="重新設定執行緒數量與模式規格"
+            >
+              🔄 重設執行緒
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

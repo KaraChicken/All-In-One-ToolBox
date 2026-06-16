@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
@@ -24,6 +24,11 @@ export const useMediaConverterViewModel = () => {
   const [isSTMode, setIsSTMode] = useState(false);
   const [conversionMode, setConversionMode] = useState<'compatibility' | 'speed' | 'quality'>('compatibility');
   const ffmpegRef = useRef(new FFmpeg());
+
+  useEffect(() => {
+    const isSABSupported = typeof SharedArrayBuffer !== 'undefined';
+    setIsSTMode(!isSABSupported);
+  }, []);
 
   const appendLog = (msg: string) => {
     setInitLogs(prev => [...prev.slice(-99), `[${new Date().toLocaleTimeString()}] ${msg}`]);
@@ -71,11 +76,17 @@ export const useMediaConverterViewModel = () => {
     try {
       const isSABSupported = typeof SharedArrayBuffer !== 'undefined';
       appendLog(`System check: SharedArrayBuffer supported = ${isSABSupported}`);
-      if (!isSABSupported) {
+      appendLog(`User selection: ${isSTMode ? 'Single-Thread (相容模式)' : 'Multi-Thread (高速模式)'}`);
+      
+      let finalSTMode = isSTMode;
+      if (!isSTMode && !isSABSupported) {
+        finalSTMode = true;
         setIsSTMode(true);
-        appendLog('⚠️ Notice: SharedArrayBuffer is not supported by your browser. Running in fallback thread-compatibility mode.');
+        appendLog('⚠️ Notice: Multi-Thread is selected but SharedArrayBuffer is not supported by your browser. Running in fallback Single-Thread mode.');
+      } else if (isSTMode) {
+        appendLog('Running in compatibility mode (Single-Thread) as requested.');
       } else {
-        appendLog('System check: High-speed multithreading enabled.');
+        appendLog('Running in high-speed mode (Multi-Thread) with safe thread isolation.');
       }
 
       appendLog('Downloading ffmpeg-core.js main thread loader...');
@@ -295,6 +306,13 @@ export const useMediaConverterViewModel = () => {
       setDuration,
       setSpeed,
       setConversionMode,
+      setIsSTMode,
+      resetEngine: () => {
+        setLoaded(false);
+        setInitializing(false);
+        setInitLogs([]);
+        setInitProgress(0);
+      },
       resetResult: () => setResultUrl(null)
     }
   };
