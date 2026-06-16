@@ -15,6 +15,13 @@ export const useMediaConverterViewModel = () => {
   const [initLogs, setInitLogs] = useState<string[]>([]);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [targetFormat, setTargetFormat] = useState('mp4');
+  const [resolution, setResolution] = useState('original');
+  const [fps, setFps] = useState('original');
+  const [audioBitrate, setAudioBitrate] = useState('128k');
+  const [muteAudio, setMuteAudio] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState('');
+  const [speed, setSpeed] = useState('1.0');
   const [error, setError] = useState<string | null>(null);
   const [isSTMode, setIsSTMode] = useState(false);
   const ffmpegRef = useRef(new FFmpeg());
@@ -110,31 +117,107 @@ export const useMediaConverterViewModel = () => {
     startLoading('正在轉換影音格式，請稍候...');
     setProgress(0);
     setError(null);
+    setResultUrl(null);
 
     const ffmpeg = ffmpegRef.current;
-    const inputName = 'input.' + file.name.split('.').pop();
+    const inputExt = file.name.split('.').pop() || 'mp4';
+    const inputName = `input.${inputExt}`;
     const outputName = `output.${targetFormat}`;
 
     try {
       await ffmpeg.writeFile(inputName, await fetchFile(file));
       
       let args = ['-i', inputName];
-      if (targetFormat === 'gif') {
-        args.push('-vf', 'fps=10,scale=320:-1:flags=lanczos', '-split', '[a][b]', '[a]palettegen[p];[b][p]paletteuse');
-      } else if (targetFormat === 'mp3') {
-        args.push('-vn', '-ab', '128k', '-ar', '44100');
+
+      // 1. Trim settings (Placed after input)
+      if (startTime.trim()) {
+        args.push('-ss', startTime.trim());
       }
+      if (duration.trim() && !isNaN(Number(duration.trim()))) {
+        args.push('-t', duration.trim());
+      }
+
+      // 2. Video Speed or Aspect/Resolution change filters
+      let vFilters: string[] = [];
+      let aFilters: string[] = [];
+
+      // Resolution scale filter for video
+      const isVideo = ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(targetFormat);
+      const isAudio = ['mp3', 'wav', 'aac', 'm4a', 'ogg'].includes(targetFormat);
+      const isGif = targetFormat === 'gif';
+
+      if (isVideo && resolution !== 'original') {
+        const width = resolution.split('x')[0];
+        vFilters.push(`scale=${width}:-2`);
+      }
+
+      // Speed adjustment filter (Video + Audio)
+      const speedVal = parseFloat(speed);
+      if (speedVal !== 1.0) {
+        if (isVideo || isGif) {
+          const ptsVal = (1 / speedVal).toFixed(4);
+          vFilters.push(`setpts=${ptsVal}*PTS`);
+        }
+        if (!muteAudio && (isVideo || isAudio)) {
+          if (speedVal >= 0.5 && speedVal <= 2.0) {
+            aFilters.push(`atempo=${speedVal}`);
+          }
+        }
+      }
+
+      // 3. Frame Rate limit (FPS)
+      if ((isVideo || isGif) && fps !== 'original') {
+        args.push('-r', fps);
+      }
+
+      // Apply video filters argument
+      if (isGif) {
+        const gifWidth = resolution !== 'original' ? resolution.split('x')[0] : '320';
+        const gifFps = fps !== 'original' ? fps : '10';
+        args.push('-vf', `fps=${gifFps},scale=${gifWidth}:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse`);
+      } else if (vFilters.length > 0) {
+        args.push('-vf', vFilters.join(','));
+      }
+
+      // 4. Audio settings / Mute
+      if (muteAudio || isGif) {
+        args.push('-an');
+      } else {
+        if (aFilters.length > 0) {
+          args.push('-filter:a', aFilters.join(','));
+        }
+        if (isAudio || isVideo) {
+          args.push('-ab', audioBitrate);
+          args.push('-ar', '44100');
+        }
+      }
+
+      // Output name
       args.push(outputName);
 
       await ffmpeg.exec(args);
       
       const data = await ffmpeg.readFile(outputName);
-      const url = URL.createObjectURL(new Blob([(data as any).buffer], { 
-        type: targetFormat === 'mp3' ? 'audio/mpeg' : (targetFormat === 'gif' ? 'image/gif' : 'video/mp4') 
-      }));
+      
+      const mimeTypes: Record<string, string> = {
+        mp4: 'video/mp4',
+        webm: 'video/webm',
+        mkv: 'video/x-matroska',
+        avi: 'video/x-msvideo',
+        mov: 'video/quicktime',
+        mp3: 'audio/mpeg',
+        wav: 'audio/wav',
+        aac: 'audio/aac',
+        m4a: 'audio/mp4',
+        ogg: 'audio/ogg',
+        gif: 'image/gif'
+      };
+
+      const type = mimeTypes[targetFormat] || 'application/octet-stream';
+      const url = URL.createObjectURL(new Blob([(data as any).buffer], { type }));
       setResultUrl(url);
     } catch (e: any) {
-      setError(`轉檔失敗: ${e.message}。建議縮小檔案大小再試一次。`);
+      setError(`轉檔失敗: ${e?.message || e}。建議縮小檔案大小再試一次。`);
     } finally {
       setLoading(false);
       stopLoading();
@@ -142,7 +225,26 @@ export const useMediaConverterViewModel = () => {
   };
 
   return {
-    state: { loaded, file, loading, progress, initProgress, initLogs, initializing, resultUrl, targetFormat, error, isSTMode },
+    state: { 
+      loaded, 
+      file, 
+      loading, 
+      progress, 
+      initProgress, 
+      initLogs, 
+      initializing, 
+      resultUrl, 
+      targetFormat, 
+      error, 
+      isSTMode,
+      resolution,
+      fps,
+      audioBitrate,
+      muteAudio,
+      startTime,
+      duration,
+      speed
+    },
     commands: {
       load,
       convert,
@@ -152,6 +254,13 @@ export const useMediaConverterViewModel = () => {
         setError(null);
       },
       setTargetFormat,
+      setResolution,
+      setFps,
+      setAudioBitrate,
+      setMuteAudio,
+      setStartTime,
+      setDuration,
+      setSpeed,
       resetResult: () => setResultUrl(null)
     }
   };

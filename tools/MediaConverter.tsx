@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Video, Upload, Download, RefreshCw, X, AlertCircle, FileText, CheckCircle2, Zap, Smartphone } from 'lucide-react';
+import { Video, Upload, Download, RefreshCw, X, AlertCircle, FileText, CheckCircle2, Zap, Smartphone, Film, Music, Image, Sliders, Settings, Clock } from 'lucide-react';
 import { Language } from '../types';
 import { useMediaConverterViewModel } from '../hooks/viewmodels/useMediaConverterViewModel';
 
@@ -8,20 +8,60 @@ interface Props { lang: Language; }
 
 const MediaConverter: React.FC<Props> = ({ lang }) => {
   const vm = useMediaConverterViewModel();
+  const logContainerRef = React.useRef<HTMLDivElement | null>(null);
 
-  const formats = [
-    { ext: 'mp4', label: 'MP4 (Video)' },
-    { ext: 'gif', label: 'GIF (Image)' },
-    { ext: 'webm', label: 'WebM (Video)' },
-    { ext: 'mp3', label: 'MP3 (Audio)' },
-    { ext: 'wav', label: 'WAV (Audio)' },
+  React.useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [vm.state.initLogs]);
+
+  const formatCategories = [
+    {
+      id: 'video',
+      title: '影片格式 Video',
+      icon: Film,
+      items: [
+        { ext: 'mp4', label: 'MP4', desc: 'H.264 / 相容性極佳' },
+        { ext: 'webm', label: 'WebM', desc: 'VP9 / 網頁高效壓縮' },
+        { ext: 'mkv', label: 'MKV', desc: '多音軌與多字幕支援' },
+        { ext: 'avi', label: 'AVI', desc: '傳統不失真格式' },
+        { ext: 'mov', label: 'MOV', desc: 'Apple 蘋果標準格式' },
+      ],
+    },
+    {
+      id: 'audio',
+      title: '音訊格式 Audio',
+      icon: Music,
+      items: [
+        { ext: 'mp3', label: 'MP3', desc: 'LAME / 最常見音訊' },
+        { ext: 'wav', label: 'WAV', desc: '無損 PCM 原始高音質' },
+        { ext: 'aac', label: 'AAC', desc: '進階音訊編碼格式' },
+        { ext: 'm4a', label: 'M4A', desc: 'Apple M4A 精簡格式' },
+        { ext: 'ogg', label: 'OGG', desc: 'Vorbis 開放音樂格式' },
+      ],
+    },
+    {
+      id: 'animation',
+      title: '動畫圖片 Image',
+      icon: Image,
+      items: [
+        { ext: 'gif', label: 'GIF Animation', desc: '10fps / 迷因動圖最佳選' },
+      ],
+    },
   ];
+
+  const [activeTab, setActiveTab] = React.useState<string>('video');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       vm.commands.setFile(e.target.files[0]);
     }
   };
+
+  const isVideoFormat = ['mp4', 'webm', 'mkv', 'avi', 'mov'].includes(vm.state.targetFormat);
+  const isAudioFormat = ['mp3', 'wav', 'aac', 'm4a', 'ogg'].includes(vm.state.targetFormat);
+  const isGifFormat = vm.state.targetFormat === 'gif';
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 px-2">
@@ -73,6 +113,7 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                   </span>
                 </div>
                 <div 
+                  ref={logContainerRef}
                   className="bg-slate-950 text-emerald-400 font-mono text-[10px] sm:text-[11px] p-3 sm:p-4 rounded-b-xl border-x border-b border-slate-900 shadow-inner h-40 overflow-y-auto space-y-1"
                 >
                   {vm.state.initLogs && vm.state.initLogs.length > 0 ? (
@@ -98,8 +139,6 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                       Initializing trace thread...
                     </div>
                   )}
-                  {/* Anchor to scroll logs down */}
-                  <div ref={(el) => el?.scrollIntoView({ behavior: 'smooth' })} />
                 </div>
               </div>
             </div>
@@ -143,7 +182,8 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* File input card */}
               <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
                 <label className="relative group cursor-pointer block">
                   <input type="file" onChange={handleFileChange} className="hidden" accept="video/*,audio/*" />
@@ -171,26 +211,235 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                 </label>
               </div>
 
+              {/* Format selection and classification tabs */}
               <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {formats.map(f => (
-                    <button
-                      key={f.ext}
-                      onClick={() => vm.commands.setTargetFormat(f.ext)}
-                      className={`px-3 py-2.5 rounded-xl text-[10px] font-black transition-all border-2 ${vm.state.targetFormat === f.ext ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-400 border-gray-50'}`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sliders size={15} className="text-indigo-600" />
+                    <span className="text-xs font-extrabold text-gray-800">選擇轉換格式</span>
+                  </div>
+                  {/* Category tabs */}
+                  <div className="flex bg-gray-50 p-1 rounded-xl">
+                    {formatCategories.map(cat => {
+                      const Icon = cat.icon;
+                      const isActive = activeTab === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setActiveTab(cat.id);
+                            // Auto select first format of newly opened category tab
+                            if (cat.items.length > 0) {
+                              vm.commands.setTargetFormat(cat.items[0].ext);
+                            }
+                          }}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${isActive ? 'bg-white shadow-xs text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        >
+                          <Icon size={11} className={isActive ? 'text-indigo-600' : 'text-gray-400'} />
+                          <span>{cat.title.split(' ')[0]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <button 
-                  onClick={vm.commands.convert}
-                  disabled={!vm.state.file || vm.state.loading}
-                  className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50"
-                >
-                  {vm.state.loading ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
-                  {vm.state.loading ? `處理中 ${vm.state.progress}%` : '開始轉檔'}
-                </button>
+
+                {/* Categories format grid display */}
+                <div className="grid grid-cols-1 gap-2.5">
+                  {formatCategories.find(c => c.id === activeTab)?.items.map(f => {
+                    const isSelected = vm.state.targetFormat === f.ext;
+                    return (
+                      <button
+                        key={f.ext}
+                        onClick={() => vm.commands.setTargetFormat(f.ext)}
+                        className={`flex items-center justify-between text-left p-3 rounded-xl border-2 transition-all ${isSelected ? 'bg-indigo-50/50 border-indigo-600' : 'bg-gray-50/50 border-transparent hover:border-gray-200'}`}
+                      >
+                        <div className="flex flex-col">
+                          <span className={`text-xs font-black uppercase ${isSelected ? 'text-indigo-600' : 'text-gray-800'}`}>{f.label}</span>
+                          <span className="text-[10px] text-gray-400 font-medium">{f.desc}</span>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'}`}>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Extra conversion custom options panel */}
+              <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+                <div className="flex items-center gap-1.5 border-b border-gray-100 pb-2">
+                  <Settings size={15} className="text-indigo-650 text-indigo-600" />
+                  <span className="text-xs font-extrabold text-gray-800">進階轉碼選項參數</span>
+                </div>
+
+                <div className="space-y-4 divide-y divide-gray-50">
+                  {/* Trim Clip parameters */}
+                  <div className="pt-1 space-y-2">
+                    <label className="flex items-center justify-between text-[11px] font-bold text-gray-600">
+                      <span className="flex items-center gap-1.5">
+                        <Clock size={12} />
+                        影音片段裁剪 (Trim)
+                      </span>
+                      <span className="text-[9px] text-gray-400">留空代表轉換完整片段</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="block text-[9px] text-gray-400 mb-0.5">開始時間 (HH:MM:SS 或秒)</span>
+                        <input
+                          type="text"
+                          value={vm.state.startTime}
+                          onChange={(e) => vm.commands.setStartTime(e.target.value)}
+                          placeholder="例如: 00:00:05"
+                          className="w-full text-xs font-bold px-3 py-2 bg-gray-50 border border-gray-105 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-gray-300 placeholder:font-normal"
+                        />
+                      </div>
+                      <div>
+                        <span className="block text-[9px] text-gray-400 mb-0.5">裁剪長度 (填寫秒數)</span>
+                        <input
+                          type="text"
+                          value={vm.state.duration}
+                          onChange={(e) => vm.commands.setDuration(e.target.value)}
+                          placeholder="例如: 15"
+                          className="w-full text-xs font-bold px-3 py-2 bg-gray-50 border border-gray-105 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-gray-300 placeholder:font-normal"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resolution Scaler - Video Specific */}
+                  {isVideoFormat && (
+                    <div className="pt-3.5 space-y-2">
+                      <label className="block text-[11px] font-bold text-gray-600">
+                        影像解析配製 (Resolution Scaling)
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                        {[
+                          { value: 'original', label: '原始比例' },
+                          { value: '1920x1080', label: '1080p' },
+                          { value: '1280x720', label: '720p' },
+                          { value: '854x480', label: '480p' },
+                          { value: '640x360', label: '360p' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => vm.commands.setResolution(opt.value)}
+                            className={`py-1.5 rounded-lg text-[9px] font-black text-center border capitalize transition-all ${vm.state.resolution === opt.value ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-500'}`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Frame rate - Video / GIF specific */}
+                  {(isVideoFormat || isGifFormat) && (
+                    <div className="pt-3.5 space-y-2">
+                      <label className="block text-[11px] font-bold text-gray-600">
+                        畫面影格限制 (Frame Rate Caps)
+                      </label>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { value: 'original', label: '原始影格' },
+                          { value: '60', label: '60 FPS' },
+                          { value: '30', label: '30 FPS' },
+                          { value: '15', label: '15 FPS' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => vm.commands.setFps(opt.value)}
+                            className={`py-1.5 rounded-lg text-[9px] font-black text-center border transition-all ${vm.state.fps === opt.value ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-500'}`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dynamic Speed controls */}
+                  <div className="pt-3.5 space-y-2">
+                    <label className="block text-[11px] font-bold text-gray-600">
+                      重製播放速度 (Speed Multiplication)
+                    </label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                      {[
+                        { value: '0.5', label: '0.5x 慢速' },
+                        { value: '0.75', label: '0.75x' },
+                        { value: '1.0', label: '1.0x 正常' },
+                        { value: '1.25', label: '1.25x' },
+                        { value: '1.5', label: '1.5x' },
+                        { value: '2.0', label: '2.0x 快速' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => vm.commands.setSpeed(opt.value)}
+                          className={`py-1.5 rounded-lg text-[9px] font-black text-center border transition-all ${vm.state.speed === opt.value ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-500'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Audio quality compression - Video and Audio specific */}
+                  {(isVideoFormat || isAudioFormat) && !vm.state.muteAudio && (
+                    <div className="pt-3.5 space-y-2">
+                      <label className="block text-[11px] font-bold text-gray-600">
+                        音軌壓縮位元率 (Audio Bitrate)
+                      </label>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { value: '128k', label: '128 kbps (標準)' },
+                          { value: '192k', label: '192 kbps (良好)' },
+                          { value: '256k', label: '256 kbps (超高)' },
+                          { value: '320k', label: '320 kbps (高傳真)' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => vm.commands.setAudioBitrate(opt.value)}
+                            className={`py-1.5 rounded-lg text-[9px] font-black text-center border transition-all ${vm.state.audioBitrate === opt.value ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 hover:bg-gray-100 border-transparent text-gray-500'}`}
+                          >
+                            {opt.label.split(' ')[0]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mute toggle - Video only */}
+                  {isVideoFormat && (
+                    <div className="pt-3.5 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-gray-600">影片靜音 (Mute Trailing Audio)</span>
+                        <span className="text-[9px] text-gray-400">移除轉換後影片中的所有音軌</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => vm.commands.setMuteAudio(!vm.state.muteAudio)}
+                        className={`w-10 h-6 rounded-full transition-all relative ${vm.state.muteAudio ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                      >
+                        <div className={`w-4 border-2 border-transparent h-4 rounded-full bg-white absolute top-1 transition-all ${vm.state.muteAudio ? 'left-5' : 'left-1'}`} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3">
+                  <button 
+                    onClick={vm.commands.convert}
+                    disabled={!vm.state.file || vm.state.loading}
+                    className="w-full py-4 bg-indigo-650 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    {vm.state.loading ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
+                    {vm.state.loading ? `處理中 ${vm.state.progress}%` : '開始執行轉檔'}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -211,7 +460,7 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                {vm.state.resultUrl ? (
                  <div className="w-full space-y-4 animate-in zoom-in-95">
                     <div className="bg-white p-1.5 rounded-[1.5rem] shadow-xl border border-gray-100">
-                       {vm.state.targetFormat === 'mp3' || vm.state.targetFormat === 'wav' ? (
+                       {vm.state.targetFormat === 'mp3' || vm.state.targetFormat === 'wav' || vm.state.targetFormat === 'aac' || vm.state.targetFormat === 'm4a' || vm.state.targetFormat === 'ogg' ? (
                          <audio src={vm.state.resultUrl} controls className="w-full" />
                        ) : vm.state.targetFormat === 'gif' ? (
                          <img src={vm.state.resultUrl} className="w-full rounded-[1.2rem] max-h-[240px] object-contain mx-auto" alt="Result" />
