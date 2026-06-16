@@ -493,6 +493,50 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                )}
             </div>
           </div>
+
+          {/* Terminal Log Panel */}
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2">
+              <div className="flex items-center gap-1.5">
+                <FileText size={15} className="text-indigo-600 dark:text-indigo-400" />
+                <span className="text-xs font-extrabold text-gray-800 dark:text-slate-100">轉檔即時日誌 Terminal Logs</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500/80" />
+                <span className="w-2 h-2 rounded-full bg-amber-500/80" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
+              </div>
+            </div>
+            
+            <div 
+              ref={logContainerRef}
+              className="bg-slate-950 text-emerald-400 font-mono text-[10px] sm:text-[11px] p-4 rounded-xl border border-slate-900 shadow-inner h-48 overflow-y-auto space-y-1"
+            >
+              {vm.state.initLogs && vm.state.initLogs.length > 0 ? (
+                vm.state.initLogs.map((log: string, idx: number) => {
+                  let color = 'text-slate-350';
+                  if (log.includes('❌') || log.includes('error') || log.includes('Fatal')) {
+                    color = 'text-rose-400';
+                  } else if (log.includes('⚠️') || log.includes('Notice') || log.includes('Warning')) {
+                    color = 'text-amber-400';
+                  } else if (log.includes('🚀') || log.includes('started') || log.includes('successfully!') || log.includes('🎬') || log.includes('✅') || log.includes('📥')) {
+                    color = 'text-emerald-400 font-bold';
+                  } else if (log.includes('[Core]')) {
+                    color = 'text-indigo-400';
+                  }
+                  return (
+                    <div key={idx} className={`${color} leading-relaxed break-all whitespace-pre-wrap`}>
+                      {log}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-slate-500 italic animate-pulse">
+                  Terminal ready... waiting for actions...
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

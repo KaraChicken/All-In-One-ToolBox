@@ -2,10 +2,8 @@
 import { useState, useRef } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
-import { useGlobalLoading } from '../../context/LoadingContext';
 
 export const useMediaConverterViewModel = () => {
-  const { startLoading, stopLoading } = useGlobalLoading();
   const [loaded, setLoaded] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,6 +24,10 @@ export const useMediaConverterViewModel = () => {
   const [isSTMode, setIsSTMode] = useState(false);
   const ffmpegRef = useRef(new FFmpeg());
 
+  const appendLog = (msg: string) => {
+    setInitLogs(prev => [...prev.slice(-99), `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  };
+
   const load = async () => {
     setLoading(true);
     setInitializing(true);
@@ -34,10 +36,6 @@ export const useMediaConverterViewModel = () => {
     setError(null);
     const ffmpeg = ffmpegRef.current;
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-    
-    const appendLog = (msg: string) => {
-      setInitLogs(prev => [...prev.slice(-99), `[${new Date().toLocaleTimeString()}] ${msg}`]);
-    };
 
     ffmpeg.on('log', ({ message }) => {
       console.debug(message);
@@ -114,10 +112,19 @@ export const useMediaConverterViewModel = () => {
   const convert = async () => {
     if (!file) return;
     setLoading(true);
-    startLoading('正在轉換影音格式，請稍候...');
     setProgress(0);
     setError(null);
     setResultUrl(null);
+
+    appendLog('--------------------------------------------------');
+    appendLog(`🎬 開始轉檔任務: ${file.name}`);
+    appendLog(`⚙️ 輸出格式: [${targetFormat.toUpperCase()}]`);
+    appendLog(`📐 解析度選項: [${resolution}]`);
+    appendLog(`🎞️ 影格率 (FPS): [${fps}]`);
+    appendLog(`🔊 音訊位元率: [${audioBitrate}]`);
+    appendLog(`🔇 靜音模式: [${muteAudio ? '啟用' : '停用'}]`);
+    appendLog(`⏱️ 局部剪切: [${startTime.trim() ? `從 ${startTime.trim()} 開始` : '無'} + ${duration.trim() ? `${duration.trim()} 秒` : '無限制'}]`);
+    appendLog(`⚡ 播放速度加速: [${speed}x]`);
 
     const ffmpeg = ffmpegRef.current;
     const inputExt = file.name.split('.').pop() || 'mp4';
@@ -125,7 +132,9 @@ export const useMediaConverterViewModel = () => {
     const outputName = `output.${targetFormat}`;
 
     try {
+      appendLog('📥 正在載入並寫入虛擬檔案系統...');
       await ffmpeg.writeFile(inputName, await fetchFile(file));
+      appendLog('✅ 寫入虛擬檔案系統成功，正在編譯並解析 FFmpeg 參數...');
       
       let args = ['-i', inputName];
 
@@ -195,8 +204,10 @@ export const useMediaConverterViewModel = () => {
       // Output name
       args.push(outputName);
 
+      appendLog(`🚀 執行轉碼核心指令: ffmpeg ${args.join(' ')}`);
       await ffmpeg.exec(args);
       
+      appendLog('📤 轉碼順利完成！正在讀取檔案快取...');
       const data = await ffmpeg.readFile(outputName);
       
       const mimeTypes: Record<string, string> = {
@@ -216,11 +227,12 @@ export const useMediaConverterViewModel = () => {
       const type = mimeTypes[targetFormat] || 'application/octet-stream';
       const url = URL.createObjectURL(new Blob([(data as any).buffer], { type }));
       setResultUrl(url);
+      appendLog('🎉 影音格式轉換成功！已封裝完畢並產生下載連結。');
     } catch (e: any) {
       setError(`轉檔失敗: ${e?.message || e}。建議縮小檔案大小再試一次。`);
+      appendLog(`❌ 轉換執行錯誤: ${e?.message || e}`);
     } finally {
       setLoading(false);
-      stopLoading();
     }
   };
 
