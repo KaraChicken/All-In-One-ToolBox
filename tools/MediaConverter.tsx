@@ -274,8 +274,72 @@ const MediaConverter: React.FC<Props> = ({ lang }) => {
                 </div>
 
                 <div className="space-y-4 divide-y divide-gray-50">
+                  {/* Conversion Mode Selection with Detailed Explanations */}
+                  <div className="pt-1 space-y-3 pb-2 select-none">
+                    <label className="block text-[11px] font-bold text-gray-600">
+                      🎯 轉換優化模式 (Optimize Mode)
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        {
+                          id: 'compatibility',
+                          title: '相容性優先',
+                          subtitle: '網頁 & 行動端通用',
+                          icon: Smartphone,
+                          desc: '將影音轉換為最通用的解碼規格（強制 YUV420p 色彩與 libx264 進階相容編碼），保證可在任何瀏覽器、通訊軟體與蘋果 (Apple QuickTime) 裝置上流暢播放，排除黑屏音影錯誤。'
+                        },
+                        {
+                          id: 'speed',
+                          title: '極速轉檔',
+                          subtitle: '深度節省等待時間',
+                          icon: Zap,
+                          desc: '自動套用極速 CPU 壓縮配置（Ultrafast 預設），大幅縮短瀏覽器 Wasm 安全沙盒中的影音轉碼秒數，對於日常快速轉檔、高頻剪輯、大檔案與臨時測試非常有感。'
+                        },
+                        {
+                          id: 'quality',
+                          title: '極致畫質',
+                          subtitle: '精準壓縮留存首選',
+                          icon: Film,
+                          desc: '套用慢速高品質編解碼（Slow 進階優化與 CRF 18 高清晰度目標配置），以更多的運算時間換取高逼真、低失真的畫質渲染效果，適合重要作品、影音檔案永久保存。'
+                        }
+                      ].map(modeOpt => {
+                        const isSelected = vm.state.conversionMode === modeOpt.id;
+                        const ModeIcon = modeOpt.icon;
+                        return (
+                          <button
+                            key={modeOpt.id}
+                            type="button"
+                            onClick={() => vm.commands.setConversionMode(modeOpt.id as 'compatibility' | 'speed' | 'quality')}
+                            className={`p-3.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-start relative group ${
+                              isSelected
+                                ? 'border-indigo-600 bg-indigo-50/20'
+                                : 'bg-gray-50/50 border-transparent hover:border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 mb-2.5">
+                              <div className={`p-1.5 rounded-xl transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none' : 'bg-gray-200/60 text-gray-500'}`}>
+                                <ModeIcon size={12} />
+                              </div>
+                              <div>
+                                <span className="text-[11px] font-black block text-gray-800">
+                                  {modeOpt.title}
+                                </span>
+                                <span className="text-[9px] text-gray-400 block font-bold tracking-tight">
+                                  {modeOpt.subtitle}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-gray-500 leading-relaxed font-bold">
+                              {modeOpt.desc}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Trim Clip parameters */}
-                  <div className="pt-1 space-y-2">
+                  <div className="pt-4 space-y-2">
                     <label className="flex items-center justify-between text-[11px] font-bold text-gray-600">
                       <span className="flex items-center gap-1.5">
                         <Clock size={12} />

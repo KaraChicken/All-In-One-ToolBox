@@ -22,6 +22,7 @@ export const useMediaConverterViewModel = () => {
   const [speed, setSpeed] = useState('1.0');
   const [error, setError] = useState<string | null>(null);
   const [isSTMode, setIsSTMode] = useState(false);
+  const [conversionMode, setConversionMode] = useState<'compatibility' | 'speed' | 'quality'>('compatibility');
   const ffmpegRef = useRef(new FFmpeg());
 
   const appendLog = (msg: string) => {
@@ -119,6 +120,7 @@ export const useMediaConverterViewModel = () => {
     appendLog('--------------------------------------------------');
     appendLog(`🎬 開始轉檔任務: ${file.name}`);
     appendLog(`⚙️ 輸出格式: [${targetFormat.toUpperCase()}]`);
+    appendLog(`🎯 運作模式: [${conversionMode === 'compatibility' ? '相容性優先' : conversionMode === 'speed' ? '極速轉檔' : '極致畫質'}]`);
     appendLog(`📐 解析度選項: [${resolution}]`);
     appendLog(`🎞️ 影格率 (FPS): [${fps}]`);
     appendLog(`🔊 音訊位元率: [${audioBitrate}]`);
@@ -201,6 +203,24 @@ export const useMediaConverterViewModel = () => {
         }
       }
 
+      // 5. Mode-based Compression Adjustments
+      if (isVideo) {
+        if (conversionMode === 'compatibility') {
+          args.push('-pix_fmt', 'yuv420p');
+          if (['mp4', 'mkv', 'mov'].includes(targetFormat)) {
+            args.push('-preset', 'medium');
+          }
+        } else if (conversionMode === 'speed') {
+          if (['mp4', 'mkv', 'mov'].includes(targetFormat)) {
+            args.push('-preset', 'ultrafast');
+          }
+        } else if (conversionMode === 'quality') {
+          if (['mp4', 'mkv', 'mov'].includes(targetFormat)) {
+            args.push('-preset', 'slow', '-crf', '18');
+          }
+        }
+      }
+
       // Output name
       args.push(outputName);
 
@@ -255,7 +275,8 @@ export const useMediaConverterViewModel = () => {
       muteAudio,
       startTime,
       duration,
-      speed
+      speed,
+      conversionMode
     },
     commands: {
       load,
@@ -273,6 +294,7 @@ export const useMediaConverterViewModel = () => {
       setStartTime,
       setDuration,
       setSpeed,
+      setConversionMode,
       resetResult: () => setResultUrl(null)
     }
   };

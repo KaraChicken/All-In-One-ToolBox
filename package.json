@@ -9,12 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "0.12.10",
+    "@ffmpeg/util": "0.12.1",
+    "lucide-react": "^0.562.0",
+    "motion": "^12.40.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "lucide-react": "^0.562.0",
-    "react-router-dom": "^7.12.0",
-    "@ffmpeg/ffmpeg": "0.12.10",
-    "@ffmpeg/util": "0.12.1"
+    "react-router-dom": "^7.12.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

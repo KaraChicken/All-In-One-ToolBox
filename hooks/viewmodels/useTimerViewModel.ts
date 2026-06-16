@@ -1,91 +1,196 @@
-
 import { useState, useEffect, useRef } from 'react';
 
+export type PomodoroMode = 'focus' | 'shortBreak' | 'longBreak';
+
+export interface PomodoroTimes {
+  focus: number;      // minutes
+  shortBreak: number; // minutes
+  longBreak: number;  // minutes
+}
+
 export const useTimerViewModel = () => {
-  const [totalSeconds, setTotalSeconds] = useState(0);
-  const [remaining, setRemaining] = useState(0);
+  const [mode, setMode] = useState<PomodoroMode>('focus');
+  const [customTimes, setCustomTimes] = useState<PomodoroTimes>({
+    focus: 25,
+    shortBreak: 5,
+    longBreak: 15,
+  });
+
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
-  const [input, setInputState] = useState({ h: 0, m: 0, s: 0 });
+  const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
+  const [currentTask, setCurrentTask] = useState('');
+  const [autoTransition, setAutoTransition] = useState(false);
+
   const timerRef = useRef<number | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const setInput = (newInput: { h: number, m: number, s: number }) => {
-    // 邏輯約束：如果小時等於 24，分與秒必須為 0
-    if (newInput.h >= 24) {
-      setInputState({ h: 24, m: 0, s: 0 });
-    } else {
-      setInputState(newInput);
-    }
-  };
-
-  const start = () => {
-    if (isActive) return;
-    let seconds = remaining;
-    if (seconds <= 0) {
-      seconds = input.h * 3600 + input.m * 60 + input.s;
-    }
-    if (seconds <= 0) return;
-    if (remaining <= 0) setTotalSeconds(seconds);
-    setRemaining(seconds);
-    setIsActive(true);
-  };
-
-  const pause = () => {
-    setIsActive(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-
-  const reset = () => {
-    setIsActive(false);
-    setRemaining(0);
-    setTotalSeconds(0);
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-
-  const quickSet = (m: number) => {
-    const s = m * 60;
-    setTotalSeconds(s);
-    setRemaining(s);
-    // 快速設定也需符合 24 小時約束
-    if (m >= 1440) { // 24 * 60 = 1440
-      setInput({ h: 24, m: 0, s: 0 });
-    } else {
-      setInput({ h: Math.floor(m / 60), m: m % 60, s: 0 });
-    }
-  };
-
+  // Initialize time based on mode
   useEffect(() => {
-    if (isActive && remaining > 0) {
+    setTimeLeft(customTimes[mode] * 60);
+    setIsActive(false);
+  }, [mode, customTimes]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  // Timer tick effect
+  useEffect(() => {
+    if (isActive) {
       timerRef.current = window.setInterval(() => {
-        setRemaining(prev => {
+        setTimeLeft((prev) => {
           if (prev <= 1) {
-            setIsActive(false);
-            if (timerRef.current) clearInterval(timerRef.current);
+            handleTimerComplete();
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [isActive, remaining]);
 
-  const getFormattedParts = (total: number) => {
-    const h = Math.floor(total / 3600);
-    const m = Math.floor((total % 3600) / 60);
-    const s = total % 60;
-    return { h, m, s };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isActive, mode]);
+
+  // Handle completion chime & automatic mode switching
+  const handleTimerComplete = () => {
+    setIsActive(false);
+    playChime();
+
+    if (mode === 'focus') {
+      setPomodorosCompleted((prev) => prev + 1);
+      // Auto transition to break after design session
+      const nextMode = (pomodorosCompleted + 1) % 4 === 0 ? 'longBreak' : 'shortBreak';
+      if (autoTransition) {
+        setTimeout(() => {
+          setMode(nextMode);
+          setIsActive(true);
+        }, 1000);
+      } else {
+        setMode(nextMode);
+      }
+    } else {
+      // Transition back to focus
+      if (autoTransition) {
+        setTimeout(() => {
+          setMode('focus');
+          setIsActive(true);
+        }, 1000);
+      } else {
+        setMode('focus');
+      }
+    }
   };
 
-  const formatTime = (total: number) => {
-    const { h, m, s } = getFormattedParts(total);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  // Safe chemical synthesized sound using Web Audio API
+  const playChime = () => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      // First beep
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.4);
+
+      // Second beep slightly offset
+      setTimeout(() => {
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+        gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc2.start(ctx.currentTime);
+        osc2.stop(ctx.currentTime + 0.5);
+      }, 150);
+
+    } catch (e) {
+      console.error('Audio play error:', e);
+    }
   };
 
-  const progress = totalSeconds > 0 ? (remaining / totalSeconds) * 100 : 100;
+  const start = () => {
+    setIsActive(true);
+  };
+
+  const pause = () => {
+    setIsActive(false);
+  };
+
+  const reset = () => {
+    setIsActive(false);
+    setTimeLeft(customTimes[mode] * 60);
+  };
+
+  const setTimeMinutes = (targetMode: PomodoroMode, minutes: number) => {
+    const val = Math.max(1, Math.min(180, minutes)); // limit between 1 minute & 3 hours
+    setCustomTimes((prev) => ({
+      ...prev,
+      [targetMode]: val,
+    }));
+  };
+
+  const formatTime = () => {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const getPercentage = () => {
+    const initialSeconds = customTimes[mode] * 60;
+    if (initialSeconds <= 0) return 100;
+    return (timeLeft / initialSeconds) * 100;
+  };
 
   return {
-    state: { remaining, progress, isActive, input, totalSeconds },
-    commands: { start, pause, reset, quickSet, setInput },
-    utils: { formatTime, getFormattedParts }
+    state: {
+      mode,
+      timeLeft,
+      isActive,
+      customTimes,
+      pomodorosCompleted,
+      currentTask,
+      autoTransition,
+      progress: getPercentage(),
+    },
+    commands: {
+      start,
+      pause,
+      reset,
+      setMode,
+      setTimeMinutes,
+      setCurrentTask,
+      setAutoTransition,
+      setPomodorosCompleted,
+      triggerTestChime: playChime
+    },
+    utils: {
+      formatTime,
+    },
   };
 };

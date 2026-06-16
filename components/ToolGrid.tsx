@@ -8,7 +8,7 @@ import { UI_STRINGS } from '../i18n';
 interface ToolGridProps {
   tools: Tool[];
   favorites: string[];
-  activeCategory: Category;
+  activeCategory?: Category;
   favoriteTools?: Tool[];
   onToolClick: (id: string) => void;
   onToggleFavorite: (id: string) => void;
@@ -93,7 +93,7 @@ const ToolGrid: React.FC<ToolGridProps> = ({
         <div className="space-y-6">
           <div className="flex items-center gap-3 px-2">
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">
-              {t[activeCategory.toLowerCase() as keyof typeof t] || activeCategory}
+              {lang === 'zh' ? '所有工具' : 'All Tools'}
             </h2>
             <div className="h-px flex-1 bg-slate-100" />
           </div>

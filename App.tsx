@@ -9,27 +9,14 @@ import { TOOLS, getIcon } from './constants';
 import { useAppViewModel } from './hooks/viewmodels/useAppViewModel';
 
 // Tools Components
-import JSONFormatter from './tools/JSONFormatter';
-import SymbolPicker from './tools/SymbolPicker';
 import QRCodeGenerator from './tools/QRCodeGenerator';
-import WordCounter from './tools/WordCounter';
 import PasswordGenerator from './tools/PasswordGenerator';
-import BMICalculator from './tools/BMICalculator';
 import UnitConverter from './tools/UnitConverter';
-import RaffleTool from './tools/RaffleTool';
-import GroupingTool from './tools/GroupingTool';
-import Scoreboard from './tools/Scoreboard';
-import PercentageCalculator from './tools/PercentageCalculator';
-import WheelRaffle from './tools/WheelRaffle';
-import CardRaffle from './tools/CardRaffle';
-import BallRaffle from './tools/BallRaffle';
-import VocabularyTool from './tools/VocabularyTool';
+import LanguageHub from './tools/LanguageHub';
 import GrammarTool from './tools/GrammarTool';
-import PhoneticTool from './tools/PhoneticTool';
+import VocabularyTool from './tools/VocabularyTool';
 import MediaConverter from './tools/MediaConverter';
 import TimerTool from './tools/TimerTool';
-import StopwatchTool from './tools/StopwatchTool';
-import NewYearCountdown from './tools/NewYearCountdown';
 import ScreenRecorder from './tools/ScreenRecorder';
 
 const App: React.FC = () => {
@@ -59,28 +46,15 @@ const App: React.FC = () => {
     let content = null;
     
     switch (toolId) {
-      case 'json-formatter': content = <JSONFormatter />; break;
       case 'media-converter': content = <MediaConverter {...props} />; break;
       case 'screen-recorder': content = <ScreenRecorder />; break;
-      case 'symbols': content = <SymbolPicker />; break;
       case 'qr-gen': content = <QRCodeGenerator />; break;
-      case 'word-counter': content = <WordCounter />; break;
       case 'password-gen': content = <PasswordGenerator />; break;
-      case 'bmi-calc': content = <BMICalculator />; break;
       case 'unit-converter': content = <UnitConverter />; break;
-      case 'raffle': content = <RaffleTool {...props} />; break;
-      case 'grouping': content = <GroupingTool />; break;
-      case 'scoreboard': content = <Scoreboard {...props} />; break;
-      case 'percent-calc': content = <PercentageCalculator {...props} />; break;
-      case 'wheel-raffle': content = <WheelRaffle {...props} />; break;
-      case 'card-raffle': content = <CardRaffle {...props} />; break;
-      case 'ball-raffle': content = <BallRaffle {...props} />; break;
-      case 'lang-vocab': content = <VocabularyTool {...props} />; break;
+      case 'lang-learning': content = <LanguageHub {...props} />; break;
       case 'lang-grammar': content = <GrammarTool {...props} />; break;
-      case 'lang-phonetic': content = <PhoneticTool {...props} />; break;
+      case 'lang-vocab': content = <VocabularyTool {...props} />; break;
       case 'countdown-timer': content = <TimerTool {...props} />; break;
-      case 'stopwatch': content = <StopwatchTool {...props} />; break;
-      case 'new-year-countdown': content = <NewYearCountdown {...props} />; break;
       default: content = null;
     }
 
