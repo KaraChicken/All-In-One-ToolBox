@@ -27,9 +27,27 @@ const Layout: React.FC<LayoutProps> = ({
   const t = UI_STRINGS[lang];
   const categories: Category[] = ['All', 'Popular', 'Developer', 'Text', 'Math', 'Language', 'Daily'];
   const activeTool = activeToolId ? TOOLS.find(tool => tool.id === activeToolId) : null;
+  
+  const navRef = React.useRef<HTMLElement | null>(null);
 
-  const getNavIcon = (cat: Category, active: boolean) => {
-    const size = 22;
+  React.useEffect(() => {
+    const navEl = navRef.current;
+    if (!navEl) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        navEl.scrollLeft += e.deltaY;
+      }
+    };
+
+    navEl.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      navEl.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  const getNavIcon = (cat: Category, active: boolean, size: number = 20) => {
     const props = { 
       size, 
       className: active 
@@ -138,21 +156,25 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* Android Bottom Navigation - Mobile and Tablet Capsule */}
       {!activeTool && (
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 sm:bottom-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[90%] sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t sm:border border-slate-100 dark:border-slate-800 z-[3000] px-2 py-3 sm:py-2 flex justify-around items-center safe-area-inset-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.03)] sm:shadow-lg sm:rounded-full transition-all duration-300">
-          {['All', 'Popular', 'Developer', 'Text', 'Daily'].map((cat) => {
+        <nav 
+          ref={navRef}
+          className="lg:hidden fixed bottom-0 left-0 right-0 sm:bottom-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[94%] sm:max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t sm:border border-slate-100 dark:border-slate-800 z-[3000] px-4 py-3 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap safe-area-inset-bottom shadow-[0_-4px_16px_rgba(0,0,0,0.04)] sm:shadow-lg sm:rounded-full transition-all duration-300"
+        >
+          {categories.map((cat) => {
             const isActive = activeCategory === cat;
             return (
               <button 
                 key={cat} 
-                onClick={() => setActiveCategory(cat as Category)}
-                className="flex flex-col items-center gap-1 flex-1 relative group"
+                onClick={() => setActiveCategory(cat)}
+                className="flex items-center gap-1 shrink-0 select-none relative"
+                id={`mobile-cat-tab-${cat.toLowerCase()}`}
               >
-                <div className={`px-4 sm:px-5 py-1 rounded-full transition-all duration-300 ${isActive ? 'bg-emerald-100 dark:bg-emerald-950/30' : 'bg-transparent'}`}>
-                  {getNavIcon(cat as Category, isActive)}
+                <div className={`px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1.5 ${isActive ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-400 font-bold' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}>
+                  {getNavIcon(cat, isActive, 16)}
+                  <span className={`text-[11px] font-extrabold tracking-tight transition-colors ${isActive ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                    {t[cat.toLowerCase() as keyof typeof t] || cat}
+                  </span>
                 </div>
-                <span className={`text-[10px] font-bold tracking-tight transition-colors ${isActive ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {t[cat.toLowerCase() as keyof typeof t] || cat}
-                </span>
               </button>
             );
           })}
